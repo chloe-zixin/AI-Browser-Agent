@@ -303,6 +303,82 @@ def inject_global_styles() -> None:
             font-size: 11px;
             margin-top: 10px;
         }
+
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+            background: #f3f6f7;
+            color: #17313a;
+        }
+
+        [data-testid="stHeader"] { background: rgba(243,246,247,0.92); }
+        .block-container {
+            max-width: 1380px;
+            padding: 2rem 2rem 3rem;
+        }
+
+        .app-shell {
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            backdrop-filter: none;
+        }
+
+        h1, h2, h3, label, p, [data-testid="stMetricLabel"] {
+            color: #17313a !important;
+        }
+
+        [data-testid="stMetric"] {
+            background: #ffffff;
+            border: 1px solid #dce5e7;
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+
+        [data-testid="stMetricValue"] { color: #145e56 !important; }
+
+        [data-testid="stDataFrame"] {
+            border: 1px solid #dce5e7;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        [data-testid="stTextInput"] input,
+        [data-testid="stNumberInput"] input,
+        [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+            border-color: #cbd9dc;
+            border-radius: 6px;
+            background: #ffffff;
+        }
+
+        [data-testid="stForm"] {
+            border: 1px solid #dce5e7;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 18px 20px 8px;
+            margin: 16px 0 24px;
+        }
+
+        [data-testid="stFormSubmitButton"] button,
+        div.stButton > button {
+            min-height: 42px;
+            border-radius: 6px;
+            border: 1px solid #145e56;
+            background: #145e56;
+            color: #ffffff;
+            font-weight: 650;
+            box-shadow: none;
+            margin-top: 0;
+        }
+
+        [data-testid="stFormSubmitButton"] button:hover,
+        div.stButton > button:hover {
+            border-color: #0d4b45;
+            background: #0d4b45;
+            color: #ffffff;
+        }
+
+        [data-testid="stAlert"] { border-radius: 6px !important; }
         </style>
         """,
         unsafe_allow_html=True,

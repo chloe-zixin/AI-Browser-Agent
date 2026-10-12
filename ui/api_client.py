@@ -41,8 +41,12 @@ def get_task_metrics_summary() -> Dict[str, Any]:
     return _handle_response(response)
 
 
-def get_task_detail(task_id: str) -> Dict[str, Any]:
-    response = requests.get(f"{API_BASE_URL}/tasks/{task_id}", timeout=TIMEOUT)
+def get_task_detail(task_id: str, include_quotes: bool = False) -> Dict[str, Any]:
+    response = requests.get(
+        f"{API_BASE_URL}/tasks/{task_id}",
+        params={"include_quotes": include_quotes},
+        timeout=TIMEOUT,
+    )
     return _handle_response(response)
 
 
