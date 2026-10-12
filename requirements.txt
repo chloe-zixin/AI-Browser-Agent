@@ -9,9 +9,6 @@ pandas
 # HTTP requests (for frontend/API calls if needed)
 requests
 
-# LLM (optional, if you use OpenAI or similar)
-openai
-
 # Streamlit dashboard
 streamlit
 

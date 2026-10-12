@@ -1,17 +1,26 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 
-# Virtual env
+# Virtual environments
 venv/
-.env
+.venv/
 
-# Data（建议保留结构但忽略内容）
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Local data files
 data/*
 !data/.gitkeep
 
-# VSCode
+# Local debug logs
+*.log
+
+# IDE
 .vscode/
+.idea/
 
 # OS
 .DS_Store

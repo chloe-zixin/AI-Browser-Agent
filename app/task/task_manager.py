@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -14,7 +14,7 @@ TASKS_DIR = DATA_DIR / "tasks"
 
 
 def utc_now_iso() -> str:
-    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def ensure_dir(path: Path) -> None:
@@ -77,7 +77,7 @@ class TaskManager:
         return self._task_dir(task_id) / "meta.json"
 
     def _build_task_id(self) -> str:
-        ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         short = uuid.uuid4().hex[:8]
         return f"task_{ts}_{short}"
 
@@ -118,7 +118,7 @@ class TaskManager:
         safe_write_json(self._meta_file(task_id), meta)
         return task
 
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task(self, task_id: str, include_quotes: bool = False) -> Optional[Dict[str, Any]]:
         task = safe_read_json(self._task_file(task_id))
         if not task:
             return None
@@ -128,6 +128,8 @@ class TaskManager:
         meta = safe_read_json(self._meta_file(task_id), default={})
 
         task["quotes_preview"] = quotes[:10] if isinstance(quotes, list) else []
+        if include_quotes:
+            task["quotes"] = quotes if isinstance(quotes, list) else []
         task["quotes_count_from_file"] = len(quotes) if isinstance(quotes, list) else 0
         task["report"] = report if isinstance(report, dict) else {}
         task["meta"] = meta if isinstance(meta, dict) else {}
@@ -145,6 +147,11 @@ class TaskManager:
             task_file = item / "task.json"
             task = safe_read_json(task_file)
             if task:
+                report = safe_read_json(item / "report.json", default={})
+                if isinstance(report, dict):
+                    for key in ("analysis_method", "provenance_version"):
+                        if not task.get(key) and report.get(key):
+                            task[key] = report[key]
                 tasks.append(task)
 
         def sort_key(x: Dict[str, Any]) -> str:
@@ -226,39 +233,44 @@ class TaskManager:
         top_tags = self._top_k(all_tags, k=8)
 
         summary = report.get("summary") or f"Successfully processed {quote_count} quotes."
+        updates = {
+            "status": "success",
+            "finished_at": finished_at,
+            "duration_seconds": duration_seconds,
+            "quote_count": quote_count,
+            "unique_authors": unique_authors,
+            "total_tags": total_tags,
+            "top_authors": top_authors,
+            "top_tags": top_tags,
+            "summary": summary,
+            "error": None,
+        }
+        if report.get("analysis_method"):
+            updates["analysis_method"] = report["analysis_method"]
+        if report.get("provenance_version"):
+            updates["provenance_version"] = report["provenance_version"]
 
-        return self.update_task(
-            task_id,
-            {
-                "status": "success",
-                "finished_at": finished_at,
-                "duration_seconds": duration_seconds,
-                "quote_count": quote_count,
-                "unique_authors": unique_authors,
-                "total_tags": total_tags,
-                "top_authors": top_authors,
-                "top_tags": top_tags,
-                "summary": summary,
-                "error": None,
-            },
-        )
+        return self.update_task(task_id, updates)
 
     def get_metrics_summary(self) -> Dict[str, Any]:
         tasks = self.list_tasks()
-        total_tasks = len(tasks)
-        success_tasks = sum(1 for t in tasks if t.get("status") == "success")
-        failed_tasks = sum(1 for t in tasks if t.get("status") == "failed")
-        running_tasks = sum(1 for t in tasks if t.get("status") == "running")
-        pending_tasks = sum(1 for t in tasks if t.get("status") == "pending")
+        verified_tasks = [t for t in tasks if t.get("provenance_version") == 1]
+        total_tasks = len(verified_tasks)
+        unverified_tasks = len(tasks) - total_tasks
+        success_tasks = sum(1 for t in verified_tasks if t.get("status") == "success")
+        failed_tasks = sum(1 for t in verified_tasks if t.get("status") == "failed")
+        running_tasks = sum(1 for t in verified_tasks if t.get("status") == "running")
+        pending_tasks = sum(1 for t in verified_tasks if t.get("status") == "pending")
 
-        total_quotes = sum(int(t.get("quote_count") or 0) for t in tasks)
+        total_quotes = sum(int(t.get("quote_count") or 0) for t in verified_tasks)
         avg_quotes_per_task = round(total_quotes / total_tasks, 2) if total_tasks else 0.0
         success_rate = round((success_tasks / total_tasks) * 100, 2) if total_tasks else 0.0
 
-        latest_task = tasks[0] if tasks else None
+        latest_task = verified_tasks[0] if verified_tasks else None
 
         return {
             "total_tasks": total_tasks,
+            "unverified_tasks": unverified_tasks,
             "success_tasks": success_tasks,
             "failed_tasks": failed_tasks,
             "running_tasks": running_tasks,
