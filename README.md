@@ -19,9 +19,15 @@
 ## 技术栈与数据流
 
 ```text
-Streamlit UI -> FastAPI -> Background Task -> Playwright -> Quotes to Scrape
-                                              -> Local rule analyzer
-                                              -> JSON task storage -> Task detail API -> UI
+Streamlit UI --create task--> FastAPI
+              |
+              v
+            Background Task
+              |
+              v
+Quotes to Scrape -> Playwright crawler -> Deduplicate -> Local rule analyzer
+                  -> Task Manager -> JSON files
+Streamlit UI <-- task list / detail API <-------------------------------+
 ```
 
 主要组件：Python 3.11+、FastAPI、Pydantic、Playwright、Streamlit、Pandas 和本地 JSON 文件存储。当前不需要数据库、LLM 密钥、Docker 或登录凭证。
@@ -105,4 +111,4 @@ tests/            离线单元测试
 
 ## 作品集说明
 
-数据源是用于演示浏览器采集流程的公开测试网站，并非客户业务系统或真实商业成果。仪表盘中的可信指标只来自当前 provenance 版本的任务；旧历史记录与真实指标分开显示。发布前请使用新环境执行环境配置、单元测试和一次手动公开站点采集，并更新当前界面截图。
+本项目目前以公开测试网站 `quotes.toscrape.com` 验证浏览器自动采集流程，尚未用于真实客户项目，也不代表已产生商业收入。它展示了网页信息的自动采集、任务状态管理、数据去重与来源追溯、可信指标统计和可视化查看能力，可作为网页信息采集、数据整理与监控类自动化需求的技术验证基础，并可根据客户的数据源、业务规则和交付要求进一步定制。
